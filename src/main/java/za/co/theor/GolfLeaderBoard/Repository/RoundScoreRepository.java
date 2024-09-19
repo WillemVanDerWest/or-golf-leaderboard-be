@@ -4,6 +4,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import za.co.theor.GolfLeaderBoard.Entity.RoundScore;
 
+import java.util.List;
+
 @Repository
 public interface RoundScoreRepository extends JpaRepository<RoundScore, Long> {
+
 }

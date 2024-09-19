@@ -1,10 +1,8 @@
 package za.co.theor.GolfLeaderBoard.Entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
@@ -16,6 +14,7 @@ public class Player {
     private Long id;
     @Column
     private String name;
+    @ToString.Exclude
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL)
     private List<RoundScore> scores;
 }

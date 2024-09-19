@@ -1,12 +1,16 @@
 package za.co.theor.GolfLeaderBoard.Controller;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import za.co.theor.GolfLeaderBoard.Entity.Player;
 import za.co.theor.GolfLeaderBoard.Entity.RoundScore;
 import za.co.theor.GolfLeaderBoard.Repository.PlayerRepository;
 import za.co.theor.GolfLeaderBoard.Repository.RoundScoreRepository;
 import za.co.theor.GolfLeaderBoard.model.CaptureScoreRequest;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("api/scoreController")
@@ -23,7 +27,7 @@ public class ScoreController {
 
 
     @PostMapping
-    public RoundScore captureScore(@RequestBody CaptureScoreRequest request){
+    public RoundScore captureScore(@RequestBody CaptureScoreRequest request) {
 
         var player = playerRepository.findByName(request.getName());
 
@@ -39,8 +43,56 @@ public class ScoreController {
         score.setScore(request.getScore());
 
         return roundScoreRepository.save(score);
+    }
+
+
+//    @GetMapping("/player/{name}")
+//    public double getOneEntry(@PathVariable String name) {
+//
+//
+//        //      for (var score: roundScores)
+////        for (int i = 0; i < roundScores.size(); i++) {
+////            totalScore = totalScore + roundScores.get(i).getScore();
+////        }
+//
+////        roundScores.forEach(score -> totalScore = totalScore + score.getScore());
+//
+////        roundScores.stream().reduce();
+//
+//
+//        return avgScore;
+//    }
+
+    @GetMapping("/player/{name}")
+    public String getByDate(@PathVariable String name) {
+
+        var player = playerRepository.findByName(name);
+        var roundScores = player.getScores();
+        double totalScore = 0;
+        double avgScore = 0;
+
+        //six months ago = current date - 6 months
+        //create a new list that only has the data van die vorige ses maande
+        //loop deur, transfer alles behalwe enige iets wat 6 maande of ouer is
+
+        LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
+        List<RoundScore> previousSixMonthScores = new ArrayList<>();
+
+        for (int i = 0; i < roundScores.size(); i++) {
+            if (roundScores.get(i).getDate().isAfter(sixMonthsAgo)){
+                 previousSixMonthScores.add(roundScores.get(i));
+            }
         }
 
+        for (var score : previousSixMonthScores) {
+            totalScore = totalScore + score.getScore();
+        }
+
+        avgScore = totalScore / roundScores.size();
+
+        return name + "'s score: " + avgScore;
+    }
 }
+
 
 
