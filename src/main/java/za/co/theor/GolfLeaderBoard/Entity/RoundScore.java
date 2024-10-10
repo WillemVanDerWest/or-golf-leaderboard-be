@@ -13,6 +13,7 @@ public class RoundScore {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private Double score;
+    private Double courseScore;
     @ToString.Exclude
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "player_id")

@@ -6,4 +6,5 @@ import lombok.Data;
 public class PlayerNameAndScoreListType {
     private String name;
     private double handicap;
+    private Number rank;
 }

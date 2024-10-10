@@ -6,12 +6,11 @@ import za.co.theor.GolfLeaderBoard.Entity.Player;
 import za.co.theor.GolfLeaderBoard.Entity.RoundScore;
 import za.co.theor.GolfLeaderBoard.Repository.PlayerRepository;
 import za.co.theor.GolfLeaderBoard.Repository.RoundScoreRepository;
+import za.co.theor.GolfLeaderBoard.Service.FrontEndModelService;
 import za.co.theor.GolfLeaderBoard.model.CaptureScoreRequest;
 import za.co.theor.GolfLeaderBoard.Service.GetPlayersData;
-import za.co.theor.GolfLeaderBoard.model.PlayerScoreAndDate;
+import za.co.theor.GolfLeaderBoard.model.FrontEndModel;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 
@@ -40,68 +39,21 @@ public class ScoreController {
         }
 
         var score = new RoundScore();
-
         score.setPlayer(player);
         score.setDate(request.getDate());
         score.setScore(request.getScore());
-
-        return roundScoreRepository.save(score);
-    }
-
-
-//    @GetMapping("/player/{name}")
-//    public double getOneEntry(@PathVariable String name) {
-//
-//
-//        //      for (var score: roundScores)
-////        for (int i = 0; i < roundScores.size(); i++) {
-////            totalScore = totalScore + roundScores.get(i).getScore();
-////        }
-//
-////        roundScores.forEach(score -> totalScore = totalScore + score.getScore());
-//
-////        roundScores.stream().reduce();
-//
-//
-//        return avgScore;
-//    }
-
-    @GetMapping("/player/{name}")
-    public String getByDate(@PathVariable String name) {
-
-        var player = playerRepository.findByName(name);
-        var roundScores = player.getScores();
-        double totalScore = 0;
-        double avgScore = 0;
-
-        //six months ago = current date - 6 months
-        //create a new list that only has the data van die vorige ses maande
-        //loop deur, transfer alles behalwe enige iets wat 6 maande of ouer is
-
-        LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
-        List<RoundScore> previousSixMonthScores = new ArrayList<>();
-
-        for (int i = 0; i < roundScores.size(); i++) {
-            if (roundScores.get(i).getDate().isAfter(sixMonthsAgo)){
-                 previousSixMonthScores.add(roundScores.get(i));
-            }
-        }
-
-        for (var score : previousSixMonthScores) {
-            totalScore = totalScore + score.getScore();
-        }
-
-        avgScore = totalScore / roundScores.size();
-
-        return name + "'s score: " + avgScore;
+        roundScoreRepository.save(score);
+        System.out.println("Added a score for " + score.getPlayer().getName());
+        return score;
     }
 
     @Autowired
     private GetPlayersData getPlayersData;
 
     @GetMapping("/recentscore/{name}")
-    public PlayerScoreAndDate getMostRecentScore(@PathVariable String name){
-        return getPlayersData.getMostRecentScore(name);
+    public Double getMostRecentScore(@PathVariable String name){
+        var recentScore = getPlayersData.getMostRecentDateForPlayer(name).getScore();
+        return recentScore;
     }
 
     @GetMapping("/handicap/{name}")
@@ -110,17 +62,28 @@ public class ScoreController {
     }
 
     @GetMapping("/data")
-    public Object getPlayerHandicapAndName(){
+    public Object getPlayerHandicapAndNameAndDate(){
 
         return getPlayersData.getHandicapAndName();
     }
 
     @GetMapping("/lastscore/{name}")
     public String getLastScore(@PathVariable String name){
-        var date = getPlayersData.getMostRecentDate(name);
+        var date = getPlayersData.getMostRecentDateForPlayer(name);
         return "Latest score is: " + date.getScore() + "and its latest date is: " + date.getDate();
     }
+
+    @Autowired
+    private FrontEndModelService frontEndModelService;
+
+    @GetMapping("/{name}/info")
+    public FrontEndModel getPlayerFrontEndStats(@PathVariable String name){
+        return frontEndModelService.assignFrontEndModel(name);
+    }
+
+    @GetMapping("/ranks")
+    public List<FrontEndModel> getRanks(){
+        var ranks = frontEndModelService.buildListOfAllPlayersData();
+        return ranks;
+    }
 }
-
-
-

@@ -10,8 +10,9 @@ import za.co.theor.GolfLeaderBoard.model.PlayerScoreAndDate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class GetPlayersData {
@@ -109,20 +110,55 @@ public class GetPlayersData {
         return validScores;
     }
 
-    public RoundScore getMostRecentDate(String name){
+    public RoundScore getMostRecentDateForPlayer(String name){
 
         var playerData = playerRepository.findByName(name);
-        var date01 = playerData.getScores().get(1).getDate();
-        var date02 = playerData.getScores().get(2).getDate();
-
         List<RoundScore> listOfScores = playerData.getScores();
 
-        LocalDateTime maxDate = listOfScores.stream().map(RoundScore::getDate).max(LocalDateTime::compareTo).get();
+        Optional<RoundScore> latestScore = listOfScores.stream()
+                .filter(Objects::nonNull)  // Ensure no null values in the list
+                .max(Comparator.comparing(RoundScore::getDate));  // Compare by date
 
-        var latestData = roundScoreRepository.findByDate(maxDate);
+        if (latestScore.isPresent()) {
+            RoundScore score = latestScore.get();
+            // Use the latest score
+            return score;
+        } else {
+            // Handle the case where no scores are found, e.g., an empty list
+            RoundScore rScore = new RoundScore();
+            rScore.setDate(LocalDateTime.now());
+            return rScore;
+        }
 
-        return latestData;
     }
+
+    public List<PlayerNameAndScoreListType> calculateRanks(){
+
+        var allPlayersData = getHandicapAndName();
+
+        List<PlayerNameAndScoreListType> sortedPlayerScores = allPlayersData.stream()
+                        .filter(Objects::nonNull)
+                                .sorted(Comparator.comparingDouble(PlayerNameAndScoreListType::getHandicap))
+                                        .collect(Collectors.toList());
+
+        for (int i = 0; i < sortedPlayerScores.size(); i++) {
+            sortedPlayerScores.get(i).setRank(i);
+        }
+        System.out.println(sortedPlayerScores);
+        return sortedPlayerScores;
+    }
+
+    public Number getPlayerRank(String name){
+        var getAllRanks = calculateRanks();
+
+        for (int i = 0; i < getAllRanks.size(); i++) {
+            if (getAllRanks.get(i).getName().equals(name)) {
+                return getAllRanks.get(i).getRank();
+            }
+        }
+        return null;
+    }
+
 
 
 
